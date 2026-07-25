@@ -91,7 +91,7 @@ export default function CandidateRow({
 
         {/* Candidate name */}
         <div className="flex-1 min-w-0">
-          <p className={`font-semibold text-base leading-snug truncate ${
+          <p className={`font-semibold text-base leading-snug line-clamp-2 ${
             hasCoins ? 'text-slate-900' : 'text-slate-600'
           }`}>
             {candidate.name}
