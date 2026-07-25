@@ -85,20 +85,22 @@ export default async function VotingPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+
+      {/* Hero image — wider container (max-w-5xl), natural portrait aspect ratio */}
+      <div className="w-full max-w-5xl mx-auto bg-amber-50 rounded-b-2xl overflow-hidden">
+        <Image
+          src="/coin-hero.png"
+          alt={title}
+          width={1122}
+          height={1402}
+          className="w-full h-auto object-contain block"
+          style={{ maxHeight: '480px' }}
+          priority
+          sizes="(max-width: 576px) 100vw, (max-width: 1024px) 80vw, 1100px"
+        />
+      </div>
+
       <div className="max-w-xl mx-auto">
-
-        {/* Hero image — full width of the container, no side padding */}
-        <div className="relative h-44 sm:h-56 bg-amber-50 rounded-b-2xl overflow-hidden">
-          <Image
-            src="/coin-hero.png"
-            alt={title}
-            fill
-            sizes="(max-width: 576px) 100vw, 576px"
-            className="object-contain"
-            priority
-          />
-        </div>
-
         <div className="px-4 pt-6 pb-10 space-y-6">
           <h1 className="text-2xl font-bold text-center">{title}</h1>
 
