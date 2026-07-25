@@ -14,7 +14,6 @@ export async function POST(request: NextRequest) {
   const { error } = await supabase.rpc('reset_votes')
 
   if (error) {
-    console.error('[reset] supabase.rpc error:', error.code, error.message, error.details)
     return NextResponse.json({ error: 'リセットに失敗しました' }, { status: 500 })
   }
 

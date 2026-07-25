@@ -212,9 +212,9 @@ BEGIN
   -- Lock settings row to prevent concurrent submit_vote during reset
   PERFORM id FROM public.settings WHERE id = true FOR UPDATE;
 
-  -- Delete vote data (public.votes rows cascade-delete via voter FK)
-  DELETE FROM public.votes;
-  DELETE FROM public.voters;
+  -- WHERE true makes the intent explicit and satisfies Supabase's bulk-delete protection
+  DELETE FROM public.votes  WHERE true;
+  DELETE FROM public.voters WHERE true;
 
   -- Reset status and results_published; title and candidates are preserved
   UPDATE public.settings
