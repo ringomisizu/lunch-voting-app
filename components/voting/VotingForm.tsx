@@ -4,7 +4,6 @@ import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Candidate } from '@/lib/types'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
 import CandidateRow from './CandidateRow'
 import PointsCounter from './PointsCounter'
 
@@ -12,6 +11,26 @@ const TOTAL_POINTS = 100
 
 interface Props {
   candidates: Candidate[]
+}
+
+// Returns a map of candidateId → rank (1–3) for candidates with coins.
+// Ties share the same rank. Only ranks 1–3 are returned.
+function computeRanks(
+  candidates: Candidate[],
+  points: Record<string, number>,
+): Record<string, number | undefined> {
+  const withPts = candidates
+    .map(c => ({ id: c.id, pts: points[c.id] ?? 0 }))
+    .filter(c => c.pts > 0)
+    .sort((a, b) => b.pts - a.pts)
+
+  const result: Record<string, number | undefined> = {}
+  let rank = 1
+  withPts.forEach((c, i) => {
+    if (i > 0 && c.pts < withPts[i - 1].pts) rank = i + 1
+    if (rank <= 3) result[c.id] = rank
+  })
+  return result
 }
 
 export default function VotingForm({ candidates }: Props) {
@@ -27,7 +46,6 @@ export default function VotingForm({ candidates }: Props) {
   const isValid = remaining === 0
 
   // Detect >0→0 transition to animate and fire confetti.
-  // Does not trigger on initial render; resets when coins are returned.
   const prevRemainingRef = useRef(remaining)
   const [justCompleted, setJustCompleted] = useState(false)
 
@@ -36,7 +54,6 @@ export default function VotingForm({ candidates }: Props) {
     prevRemainingRef.current = remaining
     if (prev > 0 && remaining === 0) {
       setJustCompleted(true)
-      // Lightweight confetti burst from near the top — dynamic import to avoid SSR issues
       import('canvas-confetti').then(({ default: confetti }) => {
         confetti({
           particleCount: 60,
@@ -93,24 +110,26 @@ export default function VotingForm({ candidates }: Props) {
     }
   }
 
+  const ranks = computeRanks(candidates, points)
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-5">
       <PointsCounter remaining={remaining} total={TOTAL_POINTS} animateComplete={justCompleted} />
 
-      <Card>
-        <CardContent className="pt-2 pb-2">
-          {candidates.map(c => (
-            <CandidateRow
-              key={c.id}
-              candidate={c}
-              value={points[c.id] ?? 0}
-              remaining={remaining}
-              onChange={val => handleChange(c.id, val)}
-              disabled={submitting}
-            />
-          ))}
-        </CardContent>
-      </Card>
+      {/* Candidate cards — no Card wrapper, each is its own card */}
+      <div className="space-y-3">
+        {candidates.map(c => (
+          <CandidateRow
+            key={c.id}
+            candidate={c}
+            value={points[c.id] ?? 0}
+            remaining={remaining}
+            rank={ranks[c.id]}
+            onChange={val => handleChange(c.id, val)}
+            disabled={submitting}
+          />
+        ))}
+      </div>
 
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 rounded-md px-4 py-3 text-sm">
