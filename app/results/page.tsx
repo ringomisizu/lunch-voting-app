@@ -2,9 +2,7 @@ import { verifySessionCookie } from '@/lib/session'
 import { supabase } from '@/lib/supabase'
 import { classifyResults } from '@/lib/results'
 import ResultsLoginForm from '@/components/results/ResultsLoginForm'
-import TopThreeCards from '@/components/results/TopThreeCards'
-import ReferenceList from '@/components/results/ReferenceList'
-import CarryoverList from '@/components/results/CarryoverList'
+import RankingList from '@/components/results/RankingList'
 
 export const dynamic = 'force-dynamic'
 
@@ -57,27 +55,18 @@ export default async function ResultsPage() {
   }))
 
   const { top3, reference, carryover } = classifyResults(candidatesWithPoints)
+  const allRanked = [...top3, ...reference, ...carryover]
 
   const title = settings.title || 'ランチ投票'
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-2xl mx-auto py-10 px-4 space-y-8">
+      <div className="max-w-xl mx-auto py-10 px-4 space-y-6">
         <h1 className="text-2xl font-bold text-center">{title} — 結果</h1>
 
-        {top3.length > 0 && (
-          <TopThreeCards candidates={top3} />
-        )}
-
-        {reference.length > 0 && (
-          <ReferenceList candidates={reference} />
-        )}
-
-        {carryover.length > 0 && (
-          <CarryoverList candidates={carryover} />
-        )}
-
-        {top3.length === 0 && reference.length === 0 && carryover.length === 0 && (
+        {allRanked.length > 0 ? (
+          <RankingList candidates={allRanked} />
+        ) : (
           <p className="text-center text-gray-400">投票データがありません</p>
         )}
       </div>

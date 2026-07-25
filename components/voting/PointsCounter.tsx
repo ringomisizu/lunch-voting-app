@@ -10,12 +10,12 @@ export default function PointsCounter({ remaining, total, animateComplete }: Pro
 
   if (isComplete) {
     return (
-      <div
-        className={`rounded-xl p-6 text-center border-2 border-green-400 bg-green-50 ${
-          animateComplete ? 'animate-coin-complete' : ''
-        }`}
-      >
-        <div className="text-2xl font-bold text-green-600">🎉 コインを全部配りました！</div>
+      <div className={`rounded-xl p-6 text-center border-2 border-green-400 bg-green-50 ${
+        animateComplete ? 'animate-coin-complete' : ''
+      }`}>
+        <div className={`text-2xl font-bold text-green-600 ${animateComplete ? 'animate-pop-in' : ''}`}>
+          🎉 じゅんびOK！
+        </div>
       </div>
     )
   }

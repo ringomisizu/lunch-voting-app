@@ -26,8 +26,8 @@ export default function VotingForm({ candidates }: Props) {
   const remaining = TOTAL_POINTS - total
   const isValid = remaining === 0
 
-  // Detect the moment remaining transitions from >0 to 0 (user-triggered completion).
-  // Does not animate on initial render, and resets when coins are returned.
+  // Detect >0→0 transition to animate and fire confetti.
+  // Does not trigger on initial render; resets when coins are returned.
   const prevRemainingRef = useRef(remaining)
   const [justCompleted, setJustCompleted] = useState(false)
 
@@ -36,6 +36,16 @@ export default function VotingForm({ candidates }: Props) {
     prevRemainingRef.current = remaining
     if (prev > 0 && remaining === 0) {
       setJustCompleted(true)
+      // Lightweight confetti burst from near the top — dynamic import to avoid SSR issues
+      import('canvas-confetti').then(({ default: confetti }) => {
+        confetti({
+          particleCount: 60,
+          spread: 70,
+          origin: { x: 0.5, y: 0.1 },
+          gravity: 1.5,
+          ticks: 120,
+        })
+      })
     } else if (remaining > 0) {
       setJustCompleted(false)
     }
@@ -114,7 +124,7 @@ export default function VotingForm({ candidates }: Props) {
         size="lg"
         disabled={!isValid || submitting}
       >
-        {submitting ? '送信中...' : 'この内容で投票する'}
+        {submitting ? '送信中...' : '🎉 じゅんびOK！'}
       </Button>
     </form>
   )
