@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import type { Candidate } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -14,9 +14,31 @@ interface Props {
   onError: (msg: string) => void
 }
 
+// Suppress Enter during IME composition (Japanese / Chinese / Korean input).
+// isComposing covers modern browsers; keyCode 229 is a legacy fallback.
+function isComposingEnter(e: React.KeyboardEvent<HTMLInputElement>): boolean {
+  return e.key === 'Enter' && (e.nativeEvent.isComposing || e.keyCode === 229)
+}
+
 export default function CandidateManager({ candidates, isEditable, onUpdate, onError }: Props) {
   const [newName, setNewName] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // Per-candidate inline edit state
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editingName, setEditingName] = useState('')
+  const editInputRef = useRef<HTMLInputElement>(null)
+
+  function startEdit(id: string, currentName: string) {
+    setEditingId(id)
+    setEditingName(currentName)
+    // Focus is handled by autoFocus on the rendered input
+  }
+
+  function cancelEdit() {
+    setEditingId(null)
+    setEditingName('')
+  }
 
   async function handleAdd() {
     const name = newName.trim()
@@ -33,6 +55,31 @@ export default function CandidateManager({ candidates, isEditable, onUpdate, onE
         onError(data.error ?? '追加に失敗しました')
       } else {
         setNewName('')
+        await onUpdate()
+      }
+    } catch {
+      onError('通信エラーが発生しました')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  async function handleSaveEdit() {
+    const name = editingName.trim()
+    if (!name || !editingId || isSubmitting) return
+    setIsSubmitting(true)
+    try {
+      const res = await fetch(`/api/admin/candidates/${editingId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        onError(data.error ?? '更新に失敗しました')
+      } else {
+        setEditingId(null)
+        setEditingName('')
         await onUpdate()
       }
     } catch {
@@ -86,6 +133,8 @@ export default function CandidateManager({ candidates, isEditable, onUpdate, onE
         ? '（15件以下にしてください）'
         : '（投票開始可能）'
 
+  const busy = isSubmitting || editingId !== null
+
   return (
     <Card>
       <CardHeader>
@@ -101,38 +150,87 @@ export default function CandidateManager({ candidates, isEditable, onUpdate, onE
           <p className="text-sm text-gray-400 py-2">候補がまだ登録されていません</p>
         )}
 
-        {candidates.map((c, i) => (
-          <div key={c.id} className="flex items-center gap-2 py-1">
-            <div className="flex flex-col gap-0.5 shrink-0">
-              <button
-                onClick={() => handleMove(i, 'up')}
-                disabled={!isEditable || i === 0}
-                className="text-gray-400 hover:text-gray-700 disabled:opacity-20 text-xs leading-none px-1"
-                aria-label="上に移動"
+        {candidates.map((c, i) =>
+          editingId === c.id ? (
+            // ── Inline edit row ──────────────────────────────────────
+            <div key={c.id} className="flex items-center gap-2 py-1">
+              <Input
+                ref={editInputRef}
+                autoFocus
+                value={editingName}
+                onChange={e => setEditingName(e.target.value)}
+                onKeyDown={e => {
+                  if (isComposingEnter(e)) return
+                  if (e.key === 'Enter') handleSaveEdit()
+                  if (e.key === 'Escape') cancelEdit()
+                }}
+                maxLength={100}
+                disabled={isSubmitting}
+                className="flex-1 h-8 text-sm"
+              />
+              <Button
+                size="sm"
+                onClick={handleSaveEdit}
+                disabled={!editingName.trim() || isSubmitting}
+                className="shrink-0"
               >
-                ▲
-              </button>
-              <button
-                onClick={() => handleMove(i, 'down')}
-                disabled={!isEditable || i === candidates.length - 1}
-                className="text-gray-400 hover:text-gray-700 disabled:opacity-20 text-xs leading-none px-1"
-                aria-label="下に移動"
+                保存
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={cancelEdit}
+                disabled={isSubmitting}
+                className="shrink-0"
               >
-                ▼
-              </button>
+                キャンセル
+              </Button>
             </div>
-            <span className="flex-1 text-sm">{c.name}</span>
-            <Button
-              variant="ghost"
-              size="sm"
-              disabled={!isEditable}
-              onClick={() => handleDelete(c.id)}
-              className="text-red-500 hover:text-red-700 hover:bg-red-50 shrink-0"
-            >
-              削除
-            </Button>
-          </div>
-        ))}
+          ) : (
+            // ── Normal row ───────────────────────────────────────────
+            <div key={c.id} className="flex items-center gap-2 py-1">
+              <div className="flex flex-col gap-0.5 shrink-0">
+                <button
+                  onClick={() => handleMove(i, 'up')}
+                  disabled={!isEditable || busy || i === 0}
+                  className="text-gray-400 hover:text-gray-700 disabled:opacity-20 text-xs leading-none px-1"
+                  aria-label="上に移動"
+                >
+                  ▲
+                </button>
+                <button
+                  onClick={() => handleMove(i, 'down')}
+                  disabled={!isEditable || busy || i === candidates.length - 1}
+                  className="text-gray-400 hover:text-gray-700 disabled:opacity-20 text-xs leading-none px-1"
+                  aria-label="下に移動"
+                >
+                  ▼
+                </button>
+              </div>
+              <span className="flex-1 text-sm">{c.name}</span>
+              {isEditable && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={busy}
+                  onClick={() => startEdit(c.id, c.name)}
+                  className="shrink-0"
+                >
+                  編集
+                </Button>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={!isEditable || busy}
+                onClick={() => handleDelete(c.id)}
+                className="text-red-500 hover:text-red-700 hover:bg-red-50 shrink-0"
+              >
+                削除
+              </Button>
+            </div>
+          )
+        )}
 
         {isEditable && (
           <>
@@ -141,14 +239,17 @@ export default function CandidateManager({ candidates, isEditable, onUpdate, onE
               <Input
                 value={newName}
                 onChange={e => setNewName(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter') handleAdd() }}
+                onKeyDown={e => {
+                  if (isComposingEnter(e)) return
+                  if (e.key === 'Enter') handleAdd()
+                }}
                 placeholder="候補名を入力（Enter または追加ボタン）"
                 maxLength={100}
-                disabled={candidates.length >= 15 || isSubmitting}
+                disabled={candidates.length >= 15 || isSubmitting || editingId !== null}
               />
               <Button
                 onClick={handleAdd}
-                disabled={!newName.trim() || isSubmitting || candidates.length >= 15}
+                disabled={!newName.trim() || isSubmitting || candidates.length >= 15 || editingId !== null}
                 className="shrink-0"
               >
                 追加
