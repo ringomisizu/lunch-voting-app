@@ -3,44 +3,54 @@ import type { Candidate } from '@/lib/types'
 interface Props {
   candidate: Candidate
   value: number
+  remaining: number
   onChange: (value: number) => void
   disabled: boolean
 }
 
-export default function CandidateRow({ candidate, value, onChange, disabled }: Props) {
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const raw = e.target.value
+interface StepButtonProps {
+  label: string
+  onClick: () => void
+  disabled: boolean
+}
 
-    if (raw === '') {
-      onChange(0)
-      return
-    }
-    // Reject anything that is not a sequence of digits (no decimals, no sign)
-    if (!/^\d+$/.test(raw)) return
+function StepButton({ label, onClick, disabled }: StepButtonProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className="h-9 w-14 rounded-lg border border-gray-300 bg-white text-sm font-medium
+                 hover:bg-gray-50 active:bg-gray-100
+                 disabled:opacity-30 disabled:cursor-not-allowed
+                 transition-colors"
+    >
+      {label}
+    </button>
+  )
+}
 
-    const num = parseInt(raw, 10)
-    if (num > 100) return
-    onChange(num)
+export default function CandidateRow({ candidate, value, remaining, onChange, disabled }: Props) {
+  function adjust(delta: number) {
+    const next = value + delta
+    if (next < 0) return
+    if (delta > 0 && delta > remaining) return
+    onChange(next)
   }
 
   return (
-    <div className="flex items-center gap-3 py-2.5 border-b last:border-b-0">
-      <span className="flex-1 text-sm font-medium">{candidate.name}</span>
-      <div className="flex items-center gap-1 shrink-0">
-        <input
-          type="text"
-          inputMode="numeric"
-          pattern="[0-9]*"
-          value={value === 0 ? '' : String(value)}
-          onChange={handleChange}
-          disabled={disabled}
-          placeholder="0"
-          aria-label={`${candidate.name}へのポイント`}
-          className="w-16 text-right border border-gray-300 rounded-md px-2 py-1 text-sm
-                     focus:outline-none focus:ring-2 focus:ring-ring
-                     disabled:opacity-50 disabled:cursor-not-allowed"
-        />
-        <span className="text-xs text-gray-400 w-4">pt</span>
+    <div className="py-3 border-b last:border-b-0 space-y-2">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-sm font-medium leading-snug">{candidate.name}</span>
+        <span className={`text-xl font-bold tabular-nums shrink-0 ${value > 0 ? 'text-amber-600' : 'text-gray-300'}`}>
+          {value}<span className="text-sm font-normal ml-0.5">枚</span>
+        </span>
+      </div>
+      <div className="flex items-center justify-end gap-1.5">
+        <StepButton label="−10" onClick={() => adjust(-10)} disabled={disabled || value < 10} />
+        <StepButton label="−1"  onClick={() => adjust(-1)}  disabled={disabled || value < 1} />
+        <StepButton label="+1"  onClick={() => adjust(1)}   disabled={disabled || remaining < 1} />
+        <StepButton label="+10" onClick={() => adjust(10)}  disabled={disabled || remaining < 10} />
       </div>
     </div>
   )

@@ -86,9 +86,15 @@ export default async function VotingPage() {
     <div className="min-h-screen bg-gray-50">
       <div className="max-xl mx-auto max-w-xl py-8 px-4 space-y-6">
         <h1 className="text-2xl font-bold text-center">{title}</h1>
-        <p className="text-sm text-center text-gray-500">
-          100ポイントを自由に配分して投票してください
-        </p>
+
+        <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 space-y-1 text-sm text-gray-700">
+          <p className="font-bold text-base">🪙 コインを100枚持っています！</p>
+          <p>行きたいお店に、好きなだけコインを配ってね。</p>
+          <p>「ここ一択！」なら100枚全部でもOK！</p>
+          <p>迷ったら、何店舗かに分けてもOK！</p>
+          <p className="font-medium pt-1">コインを全部配り終えたら投票しよう！</p>
+        </div>
+
         <VotingForm candidates={candidates} />
       </div>
     </div>

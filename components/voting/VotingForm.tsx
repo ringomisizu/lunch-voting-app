@@ -24,12 +24,7 @@ export default function VotingForm({ candidates }: Props) {
 
   const total = Object.values(points).reduce((sum, p) => sum + p, 0)
   const remaining = TOTAL_POINTS - total
-  const isValid =
-    remaining === 0 &&
-    candidates.every(c => {
-      const p = points[c.id] ?? 0
-      return Number.isInteger(p) && p >= 0
-    })
+  const isValid = remaining === 0
 
   function handleChange(id: string, value: number) {
     setPoints(prev => ({ ...prev, [id]: value }))
@@ -39,17 +34,8 @@ export default function VotingForm({ candidates }: Props) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
 
-    // Browser-side validation (mirrors server and DB constraints)
     if (total !== TOTAL_POINTS) {
-      setError(`合計が100ポイントになるように配分してください（現在 ${total} ポイント）`)
-      return
-    }
-    const hasInvalid = candidates.some(c => {
-      const p = points[c.id] ?? 0
-      return !Number.isInteger(p) || p < 0
-    })
-    if (hasInvalid) {
-      setError('ポイントは0以上の整数で入力してください')
+      setError(`コインを合計100枚配り終えてから投票してください（現在 ${total} 枚）`)
       return
     }
 
@@ -93,6 +79,7 @@ export default function VotingForm({ candidates }: Props) {
               key={c.id}
               candidate={c}
               value={points[c.id] ?? 0}
+              remaining={remaining}
               onChange={val => handleChange(c.id, val)}
               disabled={submitting}
             />
@@ -112,16 +99,8 @@ export default function VotingForm({ candidates }: Props) {
         size="lg"
         disabled={!isValid || submitting}
       >
-        {submitting ? '送信中...' : '投票する（100ポイント配分済み）'}
+        {submitting ? '送信中...' : 'この内容で投票する'}
       </Button>
-
-      {!isValid && total > 0 && !submitting && (
-        <p className="text-center text-sm text-gray-500">
-          {remaining > 0
-            ? `あと ${remaining} ポイント配分してください`
-            : `${-remaining} ポイント超過しています`}
-        </p>
-      )}
     </form>
   )
 }
