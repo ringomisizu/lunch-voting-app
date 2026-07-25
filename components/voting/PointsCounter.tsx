@@ -1,16 +1,21 @@
 interface Props {
   remaining: number
   total: number
+  animateComplete: boolean
 }
 
-export default function PointsCounter({ remaining, total }: Props) {
+export default function PointsCounter({ remaining, total, animateComplete }: Props) {
   const isComplete = remaining === 0
   const isOver = remaining < 0
 
   if (isComplete) {
     return (
-      <div className="rounded-xl p-6 text-center border-2 border-green-400 bg-green-50">
-        <div className="text-2xl font-bold text-green-600">✅ コインを全部配りました！</div>
+      <div
+        className={`rounded-xl p-6 text-center border-2 border-green-400 bg-green-50 ${
+          animateComplete ? 'animate-coin-complete' : ''
+        }`}
+      >
+        <div className="text-2xl font-bold text-green-600">🎉 コインを全部配りました！</div>
       </div>
     )
   }

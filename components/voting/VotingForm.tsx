@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Candidate } from '@/lib/types'
 import { Button } from '@/components/ui/button'
@@ -25,6 +25,21 @@ export default function VotingForm({ candidates }: Props) {
   const total = Object.values(points).reduce((sum, p) => sum + p, 0)
   const remaining = TOTAL_POINTS - total
   const isValid = remaining === 0
+
+  // Detect the moment remaining transitions from >0 to 0 (user-triggered completion).
+  // Does not animate on initial render, and resets when coins are returned.
+  const prevRemainingRef = useRef(remaining)
+  const [justCompleted, setJustCompleted] = useState(false)
+
+  useEffect(() => {
+    const prev = prevRemainingRef.current
+    prevRemainingRef.current = remaining
+    if (prev > 0 && remaining === 0) {
+      setJustCompleted(true)
+    } else if (remaining > 0) {
+      setJustCompleted(false)
+    }
+  }, [remaining])
 
   function handleChange(id: string, value: number) {
     setPoints(prev => ({ ...prev, [id]: value }))
@@ -70,7 +85,7 @@ export default function VotingForm({ candidates }: Props) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <PointsCounter remaining={remaining} total={TOTAL_POINTS} />
+      <PointsCounter remaining={remaining} total={TOTAL_POINTS} animateComplete={justCompleted} />
 
       <Card>
         <CardContent className="pt-2 pb-2">

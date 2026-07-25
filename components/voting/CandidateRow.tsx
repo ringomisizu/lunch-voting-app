@@ -46,6 +46,15 @@ export default function CandidateRow({ candidate, value, remaining, onChange, di
           {value}<span className="text-sm font-normal ml-0.5">枚</span>
         </span>
       </div>
+
+      {/* Progress bar */}
+      <div className="w-full bg-gray-100 rounded-full h-2" aria-hidden="true">
+        <div
+          className="bg-amber-400 h-2 rounded-full transition-[width] duration-200 ease-out"
+          style={{ width: `${value}%` }}
+        />
+      </div>
+
       <div className="flex items-center justify-end gap-1.5">
         <StepButton label="−10" onClick={() => adjust(-10)} disabled={disabled || value < 10} />
         <StepButton label="−1"  onClick={() => adjust(-1)}  disabled={disabled || value < 1} />
