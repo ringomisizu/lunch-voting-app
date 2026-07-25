@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import { cookies } from 'next/headers'
 import { supabase } from '@/lib/supabase'
 import VotingForm from '@/components/voting/VotingForm'
@@ -84,18 +85,46 @@ export default async function VotingPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-xl mx-auto max-w-xl py-8 px-4 space-y-6">
-        <h1 className="text-2xl font-bold text-center">{title}</h1>
+      <div className="max-w-xl mx-auto">
 
-        <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 space-y-1 text-sm text-gray-700">
-          <p className="font-bold text-base">🪙 コインを100枚持っています！</p>
-          <p>行きたいお店に、好きなだけコインを配ってね。</p>
-          <p>「ここ一択！」なら100枚全部でもOK！</p>
-          <p>迷ったら、何店舗かに分けてもOK！</p>
-          <p className="font-medium pt-1">コインを全部配り終えたら投票しよう！</p>
+        {/* Hero image — full width of the container, no side padding */}
+        <div className="relative h-44 sm:h-56 bg-amber-50 rounded-b-2xl overflow-hidden">
+          <Image
+            src="/coin-hero.png"
+            alt={title}
+            fill
+            sizes="(max-width: 576px) 100vw, 576px"
+            className="object-contain"
+            priority
+          />
         </div>
 
-        <VotingForm candidates={candidates} />
+        <div className="px-4 pt-6 pb-10 space-y-6">
+          <h1 className="text-2xl font-bold text-center">{title}</h1>
+
+          {/* 使い方 */}
+          <div className="bg-white border border-gray-200 rounded-xl px-4 py-4 space-y-4 text-sm">
+            <p className="font-bold text-base text-gray-900">🍽️ 使い方</p>
+
+            <div className="space-y-1">
+              <p className="font-semibold text-gray-800">① 候補のお店にコインを配ろう</p>
+              <p className="text-gray-500">
+                100枚のコインを、<br />
+                行きたいお店の候補へ自由に配ろう！
+              </p>
+            </div>
+
+            <div className="space-y-1">
+              <p className="font-semibold text-gray-800">② 準備OK！</p>
+              <p className="text-gray-500">
+                コインを全部配ったら<br />
+                「🎉 じゅんびOK！」を押して投票！
+              </p>
+            </div>
+          </div>
+
+          <VotingForm candidates={candidates} />
+        </div>
       </div>
     </div>
   )
