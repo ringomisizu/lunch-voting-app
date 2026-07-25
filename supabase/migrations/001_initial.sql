@@ -66,7 +66,15 @@ CREATE POLICY "deny_all_votes"
   ON public.votes      FOR ALL TO anon, authenticated USING (false);
 
 -- ============================================================
--- 6. submit_vote function
+-- 6. Table-level grants for service_role
+--    (Required for newer Supabase projects where service_role
+--     no longer gets automatic access to user-created tables)
+-- ============================================================
+GRANT ALL ON ALL TABLES    IN SCHEMA public TO service_role;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO service_role;
+
+-- ============================================================
+-- 7. submit_vote function
 -- ============================================================
 CREATE OR REPLACE FUNCTION public.submit_vote(
   p_voter_token  text,

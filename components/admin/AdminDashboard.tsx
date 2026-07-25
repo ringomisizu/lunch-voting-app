@@ -30,6 +30,8 @@ export default function AdminDashboard() {
   const [title, setTitle] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [actionError, setActionError] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [showResetConfirm, setShowResetConfirm] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
 
   // refresh() triggers the useEffect below to re-fetch all data
@@ -74,11 +76,13 @@ export default function AdminDashboard() {
   async function handleRefresh() {
     setIsLoading(true)
     setActionError(null)
+    setSuccessMessage(null)
     refresh()
   }
 
   async function patch(body: Record<string, unknown>) {
     setActionError(null)
+    setSuccessMessage(null)
     setIsLoading(true)
     try {
       const res = await fetch('/api/admin/settings', {
@@ -110,8 +114,8 @@ export default function AdminDashboard() {
   }
 
   async function handleReset() {
-    if (!confirm('投票データをすべてリセットしますか？\nタイトルと候補は残ります。この操作は元に戻せません。')) return
     setActionError(null)
+    setSuccessMessage(null)
     setIsLoading(true)
     try {
       const res = await fetch('/api/admin/reset', { method: 'POST' })
@@ -120,6 +124,8 @@ export default function AdminDashboard() {
         setActionError(data.error ?? 'リセットに失敗しました')
         setIsLoading(false)
       } else {
+        setShowResetConfirm(false)
+        setSuccessMessage('投票をリセットし、準備中に戻しました')
         refresh()
       }
     } catch {
@@ -159,6 +165,11 @@ export default function AdminDashboard() {
         {actionError && (
           <div className="bg-red-50 border border-red-200 text-red-700 rounded-md px-4 py-3 text-sm">
             {actionError}
+          </div>
+        )}
+        {successMessage && (
+          <div className="bg-green-50 border border-green-200 text-green-700 rounded-md px-4 py-3 text-sm">
+            {successMessage}
           </div>
         )}
 
@@ -211,15 +222,47 @@ export default function AdminDashboard() {
                   {settings?.results_published ? '結果を非公開にする' : '結果を公開する'}
                 </Button>
               )}
-              <Button variant="destructive" onClick={handleReset}>
-                投票をリセット
-              </Button>
             </div>
 
             {status === 'preparing' && !canStart && (
               <p className="text-sm text-gray-500">
                 投票を開始するには候補を10〜15件登録してください（現在 {candidates.length} 件）
               </p>
+            )}
+
+            <Separator />
+
+            {showResetConfirm ? (
+              <div className="border border-orange-200 bg-orange-50 rounded-lg p-4 space-y-3">
+                <p className="text-sm text-orange-800">
+                  全員の投票データを削除して、準備中に戻します。この操作は元に戻せません。実行しますか？
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowResetConfirm(false)}
+                    disabled={isLoading}
+                  >
+                    キャンセル
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={handleReset}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? 'リセット中...' : '投票をリセット'}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <Button
+                variant="destructive"
+                onClick={() => { setShowResetConfirm(true); setSuccessMessage(null) }}
+              >
+                投票をリセット
+              </Button>
             )}
           </CardContent>
         </Card>
