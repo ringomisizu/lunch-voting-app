@@ -90,6 +90,7 @@ export default function AdminDashboard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
+      if (res.status === 401) { router.refresh(); return false }
       if (!res.ok) {
         const data = await res.json()
         setActionError(data.error ?? '操作に失敗しました')
@@ -119,6 +120,7 @@ export default function AdminDashboard() {
     setIsLoading(true)
     try {
       const res = await fetch('/api/admin/reset', { method: 'POST' })
+      if (res.status === 401) { router.refresh(); return }
       if (!res.ok) {
         const data = await res.json()
         setActionError(data.error ?? 'リセットに失敗しました')
