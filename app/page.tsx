@@ -91,8 +91,8 @@ export default async function VotingPage() {
         <Image
           src="/coin-hero.png"
           alt={title}
-          width={1023}
-          height={1537}
+          width={1024}
+          height={1536}
           className="w-full h-auto object-contain block"
           style={{ maxHeight: '480px' }}
           priority
