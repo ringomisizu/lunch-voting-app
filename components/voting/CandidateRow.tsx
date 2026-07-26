@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import type { Candidate } from '@/lib/types'
+import GoldCoin from '@/components/ui/GoldCoin'
 
 interface Props {
   candidate: Candidate
@@ -74,11 +75,8 @@ export default function CandidateRow({
 
       {/* Floating coin animation on increase */}
       {showCoinAnim && (
-        <span
-          className="absolute top-3 right-14 text-lg pointer-events-none animate-coin-bounce"
-          aria-hidden="true"
-        >
-          🪙
+        <span className="absolute top-3 right-14 pointer-events-none animate-coin-bounce" aria-hidden="true">
+          <GoldCoin size={20} />
         </span>
       )}
 
@@ -99,11 +97,11 @@ export default function CandidateRow({
         </div>
 
         {/* Coin count */}
-        <div className={`shrink-0 flex items-baseline gap-1 font-bold tabular-nums ${
+        <div className={`shrink-0 flex items-center gap-1 font-bold tabular-nums ${
           hasCoins ? 'text-amber-600' : 'text-slate-300'
         }`}>
           <span className="text-2xl leading-none">{value}</span>
-          <span className="text-base leading-none">🪙</span>
+          <GoldCoin size={18} className={hasCoins ? '' : 'opacity-30'} />
         </div>
       </div>
 

@@ -1,3 +1,5 @@
+import GoldCoin from '@/components/ui/GoldCoin'
+
 interface Props {
   remaining: number
   total: number
@@ -24,7 +26,10 @@ export default function PointsCounter({ remaining, total, animateComplete }: Pro
     <div className={`rounded-xl p-6 text-center border-2 transition-colors ${
       isOver ? 'border-red-400 bg-red-50' : 'border-amber-300 bg-amber-50'
     }`}>
-      <div className="text-sm text-gray-500 mb-1">🪙 残りコイン</div>
+      <div className="flex items-center justify-center gap-1.5 text-sm text-gray-500 mb-1">
+        <GoldCoin size={20} />
+        <span>残りコイン</span>
+      </div>
       <div className={`text-5xl font-bold tabular-nums ${isOver ? 'text-red-600' : 'text-amber-700'}`}>
         {remaining}
       </div>
